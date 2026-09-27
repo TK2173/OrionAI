@@ -1,0 +1,78 @@
+<header>
+    <h1>✨ Система ORION AI</h1>
+    <p style="margin: 4px 0 0; color: #787f99; font-size: 14px;">Безопасный искусственный интеллект РФ</p>
+</header>
+
+<div id="chat-container">
+    <div class="message ai">Соединение установлено. Я автономный ИИ Orion. Какой у вас вопрос?</div>
+</div>
+
+<div id="input-container">
+    <input type="text" id="user-input" placeholder="Задайте вопрос нейросети..." onkeydown="if(event.key === 'Enter') sendMessage()">
+    <button onclick="sendMessage()">Отправить</button>
+</div>
+
+<script>
+    async function sendMessage() {
+        const inputEl = document.getElementById('user-input');
+        const text = inputEl.value.trim();
+        if (!text) return;
+
+        // 1. Показываем сообщение пользователя на экране
+        appendMessage(text, 'user');
+        inputEl.value = '';
+
+        // 2. Жесткий фильтр безопасности по законам РФ
+        const checkText = text.toLowerCase();
+        const forbidden = ['взлом', 'террор', 'наркотик', 'оружие', 'экстремизм', 'взрыв', 'убить'];
+        if (forbidden.some(word => checkText.includes(word))) {
+            setTimeout(() => appendMessage("Запрос заблокирован: обнаружено нарушение политики безопасности Orion AI и законодательства РФ. Я не генерирую подобный контент.", 'ai'), 400);
+            return;
+        }
+
+        // 3. Создаем индикатор загрузки ИИ
+        const loadingId = appendMessage("Орион думает...", 'ai');
+
+        // 4. Отправляем запрос в открытую нейросеть напрямую через надежный бесплатный текстовый API-мост
+        try {
+            const response = await fetch("https://pollinations.ai", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    messages: [
+                        { role: "system", content: "Ты — Orion AI, умная нейросеть. Отвечай развернуто, четко и строго на русском языке. Запрещен любой опасный контент." },
+                        { role: "user", content: text }
+                    ]
+                })
+            });
+
+            if (!response.ok) throw new Error("Сбой сервера");
+            
+            const replyText = await response.text(); // Получаем чистый текстовый ответ от ИИ
+            
+            removeMessage(loadingId); // Удаляем надпись загрузки
+            appendMessage(replyText, 'ai'); // Выводим настоящий ответ ИИ
+            
+        } catch (error) {
+            removeMessage(loadingId);
+            appendMessage("Не удалось получить ответ от нейросети. Проверьте подключение к интернету и попробуйте еще раз.", 'ai');
+        }
+    }
+
+    function appendMessage(text, sender) {
+        const container = document.getElementById('chat-container');
+        const msgEl = document.createElement('div');
+        msgEl.classList.add('message', sender);
+        msgEl.innerText = text;
+        const id = "msg-" + Date.now();
+        msgEl.id = id;
+        container.appendChild(msgEl);
+        container.scrollTop = container.scrollHeight;
+        return id;
+    }
+
+    function removeMessage(id) {
+        const el = document.getElementById(id);
+        if (el) el.remove();
+    }
+</script>
